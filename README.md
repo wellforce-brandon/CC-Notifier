@@ -1,92 +1,165 @@
-# Claude Code Starter Template
+# CC-Notifier
 
-A ready-to-use `.claude/` configuration folder for any repository. Ships with skills, agents, and settings aligned to Claude Code best practices (March 2026).
+A VS Code extension that sends Windows toast notifications when Claude Code is idle and waiting for user input. Never miss a prompt again.
 
-## Quick Start
+## How It Works
 
-### New Project
+```
+Claude Code finishes a task
+        |
+        v
+Claude Code Hook fires (idle_prompt / Stop / permission_prompt)
+        |
+        v
+Hook script writes event to a temp file or local IPC
+        |
+        v
+VS Code extension detects the event
+        |
+        v
+Windows toast notification + in-app notification with "Open Terminal" button
+        |
+        v
+Clicking notification focuses the correct VS Code terminal
+```
+
+CC-Notifier uses Claude Code's built-in **hooks system** rather than unstable terminal-monitoring APIs. This means it works reliably with published VS Code extensions and doesn't depend on proposed/experimental APIs.
+
+### Detected Events
+
+| Event | When It Fires |
+|-------|---------------|
+| `idle_prompt` | Claude has been idle ~60 seconds waiting for input |
+| `Stop` | Claude finishes responding (ready for next prompt) |
+| `permission_prompt` | Claude needs permission approval to proceed |
+
+## Tech Stack
+
+| Layer | Choice |
+|-------|--------|
+| Language | TypeScript |
+| Bundler | esbuild |
+| Package manager | npm |
+| Windows notifications | node-notifier |
+| In-app notifications | VS Code Notification API |
+| Detection | Claude Code hooks |
+| Test runner | Vitest (unit) + @vscode/test-electron (integration) |
+| Min VS Code version | ^1.93.0 |
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org) >= 18.x
+- [VS Code](https://code.visualstudio.com/) >= 1.93.0
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and configured
+- Windows 10/11 (for native toast notifications)
+
+## Getting Started
 
 ```bash
-git clone https://github.com/your-org/claude-code-bootstrap.git my-project
-cd my-project
-rm -rf .git && git init
+git clone https://github.com/wellforce-brandon/CC-Notifier.git
+cd CC-Notifier
+npm install
 ```
 
-Then open Claude Code and say: **"plan repo"** to plan your stack, then **"initialize repo"** to configure.
-
-### Existing Project
+### Development
 
 ```bash
-# Copy the .claude/ folder into your repo
-cp -r path/to/claude-code-bootstrap/.claude/ your-repo/.claude/
-cp path/to/claude-code-bootstrap/CLAUDE.md your-repo/CLAUDE.md
-cp path/to/claude-code-bootstrap/agents.md your-repo/agents.md
+# Compile and watch for changes
+npm run watch
+
+# Launch Extension Development Host
+# Press F5 in VS Code (runs .vscode/launch.json)
+
+# Run tests
+npm test
+
+# Package as .vsix
+npm run package
 ```
 
-Then open Claude Code in your repo and say: **"initialize repo"** to merge the template with your existing setup.
+### Hook Setup
 
-## Workflow
+The extension will guide you through configuring Claude Code hooks on first activation. The hooks are added to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "idle_prompt",
+        "hooks": [{ "type": "command", "command": "node /path/to/cc-notifier/hook-script.js idle" }]
+      },
+      {
+        "matcher": "permission_prompt",
+        "hooks": [{ "type": "command", "command": "node /path/to/cc-notifier/hook-script.js permission" }]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "node /path/to/cc-notifier/hook-script.js stop" }]
+      }
+    ]
+  }
+}
+```
+
+## Project Structure
 
 ```
-plan repo  →  initialize repo  →  (build features)  →  update practices
-    ↑                                    |
-    |              spec developer  ←─────┘
-    |              (plan in one session, execute in another)
-    └──────────────────────────────────────────────────────┘
+CC-Notifier/
+  src/
+    extension.ts          # Extension entry point (activate/deactivate)
+    notifications.ts      # Windows toast + VS Code notification logic
+    hook-listener.ts      # Watches for hook events (file watcher or IPC)
+    terminal-manager.ts   # Maps session IDs to VS Code terminals
+    config.ts             # Extension settings and defaults
+  hook/
+    hook-script.js        # Script invoked by Claude Code hooks (writes events)
+  test/
+    unit/                 # Vitest unit tests
+    integration/          # @vscode/test-electron integration tests
+  .vscode/
+    launch.json           # Extension debug configuration
+    tasks.json            # Build tasks
+  package.json            # Extension manifest + dependencies
+  tsconfig.json           # TypeScript config
+  esbuild.mjs             # Build script
+  .vscodeignore           # Files excluded from .vsix package
 ```
 
-1. **Plan first:** `plan repo` researches current options and recommends the best stack for your project, then generates README, design guardrails, and tools reference.
-2. **Initialize:** `init-repo` reads the plan and configures `.claude/` with skills, agents, settings, and hierarchical CLAUDE.md files.
-3. **Build features:** Use `spec developer` for big features -- it interviews you, explores the codebase, and generates a detailed plan saved to `/tasks`. Execute in a fresh session.
-4. **Stay current:** `update practices` fetches latest best practices and updates your config. Safe to run anytime.
+## Features
 
-## What's Included
+- **Windows toast notifications** -- appear even when VS Code is in the background
+- **In-app notifications** -- VS Code notification with "Open Terminal" button
+- **Per-terminal tracking** -- each Claude Code session tracked independently
+- **Auto-dismiss** -- notifications clear when you focus the idle terminal
+- **Session identification** -- notifications show which terminal/session is waiting
 
-### Skills
+## Development Phases
 
-| Skill | Trigger | Description |
-|-------|---------|-------------|
-| plan-repo | "plan repo" | Research and recommend best tech stack, generate README, design guardrails, tools reference |
-| init-repo | "initialize repo" | Build or rebuild the .claude/ folder with best practices |
-| update-practices | "update practices" | Fetch latest best practices and update config |
-| spec-developer | "spec developer" | Interview-driven feature spec saved to /tasks |
-| code-review | "code review" | Full codebase review with severity-ranked findings |
-| security-scan | "security scan" | OWASP Top 10, secrets detection, dependency audit |
-| performance-review | "performance review" | Bottleneck analysis with impact-ranked fixes |
-| dependency-audit | "dependency audit" | Outdated, vulnerable, and unused dependency detection |
-| test-scaffold | "scaffold tests" | Generate test files for untested modules |
-| doc-sync | "sync docs" | Align documentation with current code |
-| mermaid-diagram | "mermaid diagram" | Generate data flow / architecture diagrams |
+### Phase 1: Foundation
+- Project scaffolding (package.json, tsconfig, esbuild)
+- Hook script that writes events to a temp directory
+- File watcher in the extension that picks up events
+- Basic Windows toast notification via node-notifier
 
-### Agents
+### Phase 2: Core Features
+- Per-terminal session tracking (map session_id to VS Code terminal)
+- "Open Terminal" button on notifications that focuses the correct terminal
+- Auto-dismiss when terminal is focused
+- VS Code status bar indicator showing idle session count
+- Permission prompt notifications (distinct from idle)
 
-See [agents.md](agents.md) for the full agent registry.
+### Phase 3: Polish
+- First-run setup wizard for Claude Code hooks configuration
+- Extension settings (enable/disable notification types, idle threshold)
+- Error handling for missing hooks, permissions issues
+- Edge cases: multiple windows, remote SSH sessions
 
-| Agent | Purpose |
-|-------|---------|
-| architect | Phase-based planning, tech stack decisions, file structure |
-| reviewer | Code review for correctness and maintainability |
-| security | Vulnerability detection and security analysis |
-| performance | Bottleneck identification and optimization |
-| explorer | Codebase exploration, research, and context gathering |
-
-### Key Concepts
-
-- **Phase-based planning:** Foundation → Core → Polish → Ship. No timelines.
-- **Hierarchical CLAUDE.md:** Root → subfolder, loaded top-down. Only relevant files load.
-- **Subagent-first:** Always offload research, exploration, and log analysis to subagents. Include a "why" in every subagent prompt.
-- **Plan/execute separation:** Plan in one session, execute in another. Save plans to `/tasks`.
-- **Date-aware practices:** Always checks the current date when fetching best practices.
-- **Tools reference:** `.claude/references/tools.md` lists all CLI tools so Claude can detect and install missing ones.
-- **Design guardrails:** `.claude/references/design-guardrails.md` enforces UI/design SLA for frontend projects.
-
-## Keeping Up to Date
-
-Say **"update practices"** in Claude Code. The skill fetches the latest best practices from official and community sources, then updates your config. Safe to run anytime.
-
-## Full Documentation
-
-See [instructions.md](instructions.md) for complete documentation on every skill, agent, and configuration option.
+### Phase 4: Ship
+- Package as .vsix
+- Documentation
+- Optional: VS Code Marketplace publishing
 
 ## License
 

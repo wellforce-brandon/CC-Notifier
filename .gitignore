@@ -6,61 +6,19 @@
 # Node
 node_modules/
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-.npm
-.yarn/cache
-.yarn/install-state.gz
 dist/
-build/
+out/
 coverage/
-.next/
-.nuxt/
-.output/
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
-*.egg-info/
-.eggs/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-htmlcov/
+# VS Code Extension
+*.vsix
+.vscode-test/
 
-# Rust
-target/
-Cargo.lock
-
-# Go
-bin/
-pkg/
-
-# Java/Kotlin
-*.class
-*.jar
-*.war
-*.ear
-.gradle/
-build/
-
-# IDE
-.vscode/
+# IDE (NOTE: .vscode/ is NOT ignored -- it contains extension launch/debug config)
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
-Thumbs.db
-*.sublime-workspace
-*.sublime-project
 
 # Environment and secrets
 .env
@@ -68,17 +26,14 @@ Thumbs.db
 .env.*.local
 *.pem
 *.key
-*.cert
 
 # OS
 .DS_Store
+Thumbs.db
 Desktop.ini
-ehthumbs.db
-Icon?
 
 # Logs
 *.log
-logs/
 
 # Temporary files
 tmp/

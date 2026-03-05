@@ -9,80 +9,83 @@ Claude Code reads this file to know which CLI tools are available and how to use
 - Claude Code should check `<tool> --version` before assuming a tool is available.
 - If a tool is missing and needed, ask the user before installing.
 
-## Important: No Local Infrastructure
+## Important: No Backend Infrastructure
 
-All databases, caches, and backend services run on **Northflank** and **Cloudflare** -- never locally. There is no Docker, no local Postgres, no local Redis. Development connects to remote services via environment variables or Northflank CLI port-forwarding.
+This is a VS Code extension project. There is no backend, no database, no hosting. All tools are local development tools.
 
-## Universal Tools
+## Core Tools
+
+### Node.js / npm
+- **Check:** `node --version && npm --version`
+- **Install:** https://nodejs.org or `nvm install --lts`
+- **Min version:** Node 18.x, npm 9.x
+- **Usage:** `npm install`, `npm run <script>`, `npx <command>`
 
 ### Git
 - **Check:** `git --version`
 - **Usage:** Version control. Always available.
 
-### Node.js / npm (if JS/TS project)
-- **Check:** `node --version && npm --version`
-- **Install:** https://nodejs.org or `nvm install --lts`
-- **Usage:** `npm install`, `npm run <script>`, `npx <command>`
+### TypeScript
+- **Check:** `npx tsc --version`
+- **Install:** `npm i -D typescript`
+- **Usage:** `npx tsc --noEmit` (type checking only -- esbuild handles compilation)
 
-### Bun (alternative JS runtime)
-- **Check:** `bun --version`
-- **Install:** `curl -fsSL https://bun.sh/install | bash`
-- **Usage:** `bun install`, `bun run <script>`, `bunx <command>`
+## Build Tools
 
-### Python / pip (if Python project)
-- **Check:** `python3 --version && pip3 --version`
-- **Install:** https://python.org or system package manager
-- **Usage:** `pip install -r requirements.txt`, `python3 -m <module>`
+### esbuild
+- **Check:** `npx esbuild --version`
+- **Install:** `npm i -D esbuild`
+- **Usage:**
+  - `npm run build` -- production bundle
+  - `npm run watch` -- watch mode for development
+  - Config in `esbuild.mjs`
 
-## Stack-Specific Tools
+## Linter & Formatter
 
-This section is populated by plan-repo or init-repo based on the project's stack. Below are common examples.
+### Biome
+- **Check:** `npx biome --version`
+- **Install:** `npm i -D @biomejs/biome`
+- **Usage:**
+  - `npx biome check .` -- lint + format check
+  - `npx biome check --write .` -- auto-fix
+  - `npx biome format --write .` -- format only
 
-### Package Managers
-| Tool | Check | Install | Use When |
-|------|-------|---------|----------|
-| pnpm | `pnpm --version` | `npm i -g pnpm` | Monorepos, disk-efficient deps |
-| yarn | `yarn --version` | `npm i -g yarn` | Projects using yarn.lock |
-| uv | `uv --version` | `pip install uv` | Fast Python package management |
-| cargo | `cargo --version` | https://rustup.rs | Rust projects |
-| go | `go version` | https://go.dev/dl | Go projects |
+## Test Tools
 
-### Linters & Formatters
-| Tool | Check | Install | Use When |
-|------|-------|---------|----------|
-| eslint | `npx eslint --version` | `npm i -D eslint` | JS/TS linting |
-| prettier | `npx prettier --version` | `npm i -D prettier` | JS/TS/CSS/MD formatting |
-| biome | `npx biome --version` | `npm i -D @biomejs/biome` | Fast JS/TS lint + format |
-| ruff | `ruff --version` | `pip install ruff` | Fast Python lint + format |
-| rustfmt | `rustfmt --version` | Included with rustup | Rust formatting |
+### Vitest (unit tests)
+- **Check:** `npx vitest --version`
+- **Install:** `npm i -D vitest`
+- **Usage:**
+  - `npx vitest` -- run in watch mode
+  - `npx vitest run` -- single run
+  - `npx vitest run --coverage` -- with coverage
 
-### Test Runners
-| Tool | Check | Install | Use When |
-|------|-------|---------|----------|
-| vitest | `npx vitest --version` | `npm i -D vitest` | Vite-based JS/TS projects |
-| jest | `npx jest --version` | `npm i -D jest` | JS/TS testing |
-| pytest | `pytest --version` | `pip install pytest` | Python testing |
-| playwright | `npx playwright --version` | `npm i -D @playwright/test` | E2E browser testing |
+### @vscode/test-electron (integration tests)
+- **Check:** Listed in package.json devDependencies
+- **Install:** `npm i -D @vscode/test-electron`
+- **Usage:** `npm run test:integration` -- runs tests in a real VS Code instance
 
-### Build Tools
-| Tool | Check | Install | Use When |
-|------|-------|---------|----------|
-| vite | `npx vite --version` | `npm i -D vite` | Frontend builds |
-| turbo | `npx turbo --version` | `npm i -D turbo` | Monorepo builds |
-| esbuild | `npx esbuild --version` | `npm i -D esbuild` | Fast JS bundling |
-| tsc | `npx tsc --version` | `npm i -D typescript` | TypeScript compilation |
+## Packaging
 
-### Database Tools (Remote Only)
-| Tool | Check | Install | Use When |
-|------|-------|---------|----------|
-| prisma | `npx prisma --version` | `npm i -D prisma` | Prisma ORM (connects to Northflank Postgres) |
-| drizzle-kit | `npx drizzle-kit --version` | `npm i -D drizzle-kit` | Drizzle ORM (connects to Northflank Postgres) |
+### vsce (VS Code Extension Manager)
+- **Check:** `npx vsce --version`
+- **Install:** `npm i -D @vscode/vsce`
+- **Usage:**
+  - `npx vsce package` -- create .vsix file
+  - `npx vsce publish` -- publish to Marketplace (requires PAT)
 
-### Deployment Tools
-| Tool | Check | Install | Use When |
-|------|-------|---------|----------|
-| wrangler | `npx wrangler --version` | `npm i -D wrangler` | Cloudflare Pages & R2 |
-| northflank | `northflank --version` | `npm i -g @northflank/cli` | Northflank backend, Postgres, Redis |
+## VS Code Extension Development
+
+### yo generator-code (scaffolding only)
+- **Check:** `npx yo --version`
+- **Install:** `npm i -g yo generator-code`
+- **Usage:** `yo code` -- scaffold a new extension (one-time use)
+- **Note:** Only needed for initial scaffolding. Not needed after project is set up.
+
+### Extension Development Host
+- **Usage:** Press F5 in VS Code to launch a new VS Code window with the extension loaded
+- **Debug:** Set breakpoints in TypeScript source, they work in the Extension Development Host
+- **Reload:** Ctrl+Shift+F5 to reload the extension after changes
 
 ## Available MCP Servers
 
@@ -151,11 +154,3 @@ Claude Code has access to the following MCP (Model Context Protocol) servers. Th
 |------------|---------|
 | **ninjaone** | RMM/endpoint management: devices, organizations, tickets, patches, scripts, alerts |
 | **zendesk** | Help desk: tickets, users, organizations, triggers, automations, macros, views |
-
-## Project-Specific Tools
-
-<!-- init-repo and plan-repo append project-specific entries here -->
-<!-- Format: ### Tool Name -->
-<!-- - **Check:** `command --version` -->
-<!-- - **Install:** `install command` -->
-<!-- - **Usage:** Common commands for this project -->

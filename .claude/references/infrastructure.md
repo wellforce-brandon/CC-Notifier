@@ -1,71 +1,21 @@
-# Infrastructure Stack (Fixed)
+# Infrastructure -- CC-Notifier
 
-This is the standard hosting architecture for all projects bootstrapped from this template. The plan-repo skill must use this infrastructure -- it is not negotiable or user-configurable.
+This is a VS Code extension. There is no backend, no database, no hosting infrastructure.
 
-## Architecture
+## Runtime Environment
 
-```
-User Browser
-    |
-    +---> Cloudflare Pages (frontend SPA/SSR)
-    |         |
-    |         +---> Northflank API (all backend logic + auth)
-    |         |
-    |         +---> Cloudflare R2 (public file downloads)
-    |
-    +---> Better Auth endpoints (hosted within Northflank API)
-              |
-              +---> /api/auth/sign-in
-              +---> /api/auth/sign-up
-              +---> /api/auth/sign-in/social (Google, Microsoft)
-              +---> /api/auth/magic-link
-              +---> /api/auth/passkey
-              +---> /api/auth/two-factor
+- **Extension host:** VS Code's Node.js extension host process
+- **Hook script:** Invoked by Claude Code CLI as a standalone Node.js process
+- **IPC:** File-based (JSON files in OS temp directory)
 
-Northflank API Service
-    |
-    +---> Northflank Postgres (application data + auth tables)
-    +---> Northflank Redis (caching, sessions, job queues)
-    +---> Cloudflare R2 (signed URLs for private downloads)
-    +---> Email provider (Resend/SES for magic links, OTPs)
-    +---> External APIs (Stripe, webhooks, etc.)
+## Distribution
 
-Northflank Cron Jobs
-    |
-    +---> Scheduled tasks (cleanup, reports, sync, email digests)
-    +---> Runs as standalone container on schedule
-```
+- **Development:** F5 in VS Code launches Extension Development Host
+- **Packaging:** `npx vsce package` creates a `.vsix` file
+- **Installation:** `code --install-extension cc-notifier-x.y.z.vsix`
+- **Optional:** VS Code Marketplace via `npx vsce publish`
 
-## Infrastructure Decisions (Locked)
+## External Dependencies
 
-| Layer | Choice | Notes |
-|-------|--------|-------|
-| Frontend hosting | Cloudflare Pages | SPA or SSR, deployed via Wrangler or git integration |
-| Backend hosting | Northflank | Container-based, all API logic and auth |
-| Database | Northflank Postgres | Application data + Better Auth tables |
-| Cache/Queue | Northflank Redis | Sessions, caching, job queues |
-| Object storage | Cloudflare R2 | Public downloads (direct) + private downloads (signed URLs) |
-| Auth | Better Auth | Hosted within the Northflank API, not a separate service |
-| Cron jobs | Northflank Cron | Standalone container on schedule |
-| Email | Resend or AWS SES | Magic links, OTPs, transactional email |
-| CDN | Cloudflare (automatic) | Comes with Pages |
-
-## Auth Methods (Better Auth)
-
-All projects include these auth methods by default:
-- Email/password sign-in and sign-up
-- Social sign-in (Google, Microsoft)
-- Magic link
-- Passkey (WebAuthn)
-- Two-factor authentication (TOTP)
-
-## What plan-repo Still Decides
-
-The infrastructure above is fixed. Plan-repo researches and recommends only:
-- Language and runtime (TypeScript/Bun, TypeScript/Node, Go, Rust, etc.)
-- Frontend framework (Next.js, SvelteKit, Astro, Nuxt, etc.)
-- Backend framework (Hono, Express, Fastify, Elysia, etc.)
-- UI component library (shadcn/ui, Mantine, MUI, etc.)
-- Styling approach (Tailwind, CSS Modules, etc.)
-- ORM/query builder (Drizzle, Prisma, Kysely, etc.)
-- Developer tooling (package manager, linter, formatter, test runner)
+- **Claude Code CLI:** Must be installed and configured with hooks pointing to the hook script
+- **Windows 10/11:** Required for native toast notifications via node-notifier
