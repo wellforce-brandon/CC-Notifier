@@ -1,0 +1,83 @@
+{
+  "name": "cc-notifier",
+  "displayName": "CC-Notifier",
+  "description": "Windows toast notifications when Claude Code is idle and waiting for user input",
+  "version": "0.1.0",
+  "publisher": "cc-notifier",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "CC-Notifier",
+      "properties": {
+        "ccNotifier.enableToast": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Windows toast notifications when Claude Code is waiting"
+        },
+        "ccNotifier.enableInApp": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show VS Code in-app notifications when Claude Code is waiting"
+        },
+        "ccNotifier.notifyOnIdle": {
+          "type": "boolean",
+          "default": true,
+          "description": "Notify when Claude Code is idle and waiting for input"
+        },
+        "ccNotifier.notifyOnPermission": {
+          "type": "boolean",
+          "default": true,
+          "description": "Notify when Claude Code needs permission to proceed"
+        },
+        "ccNotifier.enableSound": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play a sound with toast notifications"
+        },
+        "ccNotifier.verboseLogging": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable verbose logging in the CC-Notifier output channel"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "ccNotifier.configureHooks",
+        "title": "CC-Notifier: Configure Claude Code Hooks"
+      },
+      {
+        "command": "ccNotifier.showLog",
+        "title": "CC-Notifier: Show Log"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs --production",
+    "watch": "node esbuild.mjs --watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "node ./test/integration/runTests.js",
+    "package": "npm run build && vsce package",
+    "prepackage": "npm run typecheck && npm run lint && npm run test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.93.0",
+    "@vscode/test-electron": "^2.4.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

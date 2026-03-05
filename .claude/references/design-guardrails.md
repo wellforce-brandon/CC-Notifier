@@ -8,10 +8,12 @@
 
 ## Notification UX
 
-- **Windows toast:** Use `node-notifier` with `WindowsToaster`. Include the terminal/session name in the notification title.
+- **Windows toast:** Use PowerShell WinRT toast (`hook/toast.ps1`) with `activationType="protocol"` and `Microsoft.Windows.Explorer` AppID. Include the folder name in the notification title.
 - **In-app notification:** Use `vscode.window.showInformationMessage()` with an "Open Terminal" action button. Never use `showWarningMessage` or `showErrorMessage` for idle notifications.
 - **Auto-dismiss:** When the user focuses the idle terminal, dismiss the in-app notification. Toast notifications are OS-managed and dismissed on click.
 - **No notification spam:** Debounce notifications per session. If a session is already notified as idle, do not re-notify until the user interacts with it.
+- **Focus suppression:** Skip toast when VS Code is focused (`vscode.window.state.focused`). Still fire in-app notifications since they're unobtrusive.
+- **Reminder cancellation:** Clear reminder timers when (a) user clicks the toast (URI handler), or (b) VS Code window regains focus (`onDidChangeWindowState`).
 - **Permission prompts are higher priority:** Use a distinct notification style (or `showWarningMessage`) for permission_prompt events since they block Claude's work.
 
 ## Status Bar
@@ -73,9 +75,8 @@ Extension settings in `contributes.configuration`:
 
 ## Packaging & Bundling
 
-- **node-notifier must NOT be in esbuild `external`** -- it has platform-specific binaries (WindowsToaster). Either bundle it or keep it in `node_modules` alongside `dist/extension.js`.
-- **Windows 10/11 toast appID** -- node-notifier's `WindowsToaster` requires a valid `appID` for toasts to display correctly (Fall Creators Update+). Use VS Code's appID or register a custom one.
-- **Reference extension:** [vscode-notify-desktop](https://github.com/ssv445/vscode-notify-desktop) uses the same pattern (external trigger → extension → node-notifier → toast).
+- **Toast script:** `hook/toast.ps1` is spawned via `child_process.execFile`. It uses Windows Runtime `Windows.UI.Notifications` with `Microsoft.Windows.Explorer` AppID. node-notifier is no longer used.
+- **Reference extension:** [vscode-notify-desktop](https://github.com/ssv445/vscode-notify-desktop) uses a similar pattern (external trigger → extension → toast).
 
 ## Performance
 

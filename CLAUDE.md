@@ -78,3 +78,5 @@ See `agents.md` for the full registry: architect, reviewer, security, performanc
 3. Do not over-engineer. Only make changes directly requested or clearly necessary.
 4. Check `.claude/references/tools.md` for CLI tools before running commands.
 5. Check `.claude/references/design-guardrails.md` for notification UX rules.
+6. Before debugging a stubborn issue, check `.claude/references/dead-ends/` for prior failed attempts.
+7. Before ending a session with an unresolved bug, write/update a dead-end file using `.claude/references/dead-ends/TEMPLATE.md`.

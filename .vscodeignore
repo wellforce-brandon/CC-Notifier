@@ -1,0 +1,16 @@
+.vscode/**
+.vscode-test/**
+src/**
+test/**
+.claude/**
+tasks/**
+.gitignore
+biome.json
+tsconfig.json
+esbuild.mjs
+vitest.config.ts
+**/*.map
+**/*.ts
+!dist/**
+!hook/**
+!node_modules/node-notifier/**
